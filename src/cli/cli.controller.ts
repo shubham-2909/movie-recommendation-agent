@@ -16,10 +16,6 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-/**
- * Prompts the user for a valid yes/no response.
- * @returns {Promise<string>} "y" or "n"
- */
 const getYesNoResponse = async (): Promise<string> => {
   while (true) {
     const response = await new Promise<string>((resolve) => {
@@ -36,9 +32,6 @@ const getYesNoResponse = async (): Promise<string> => {
   }
 };
 
-/**
- * Handles user input for the movie recommendation CLI.
- */
 const getUserInput = async (): Promise<void> => {
   rl.question(
     chalk.blueBright("What kind of movie are you looking for today? "),
@@ -52,7 +45,7 @@ const getUserInput = async (): Promise<void> => {
       let attempts = 0;
       let suggestedMovies: string[] = [];
       let feedback = "";
-      let probingContext: string[] = [];
+      let probingContext: { q: string; a: string }[] = [];
 
       while (attempts < 3) {
         const fullQuery = previousQueries.join(" ");
@@ -72,18 +65,15 @@ const getUserInput = async (): Promise<void> => {
 
           if (feedback === "y") {
             console.log(chalk.green("\nEnjoy your movie! 🎬"));
-
-            // ✅ Run logging in the background (non-blocking)
             runInBackgroundTask(() =>
               saveUserLog(answer, suggestedMovies, probingContext, true)
             );
-
             rl.close();
             return;
           }
         } else {
           console.log(chalk.red("\nNo matches found."));
-          feedback = "n"; // ✅ Mark as unsuccessful attempt
+          feedback = "n";
         }
 
         if (feedback === "n") {
@@ -93,7 +83,6 @@ const getUserInput = async (): Promise<void> => {
 
           previousQueries = [answer];
 
-          // **Ask first follow-up question based on initial user input**
           let followUpQuestion = await generateFirstFollowUpQuestion(answer);
           console.log(chalk.magentaBright(`• ${followUpQuestion}`));
 
@@ -101,15 +90,14 @@ const getUserInput = async (): Promise<void> => {
             rl.question(chalk.cyanBright("> "), resolve);
           });
 
+          probingContext.push({ q: followUpQuestion, a: userResponse });
           let refinedQuery = await generateRefinedQuery(
             previousQueries,
             followUpQuestion,
             userResponse
           );
           previousQueries.push(refinedQuery);
-          probingContext.push(refinedQuery);
 
-          // **Ask second follow-up question based on first response**
           followUpQuestion = await generateNextFollowUpQuestion(
             followUpQuestion,
             userResponse
@@ -120,13 +108,13 @@ const getUserInput = async (): Promise<void> => {
             rl.question(chalk.cyanBright("> "), resolve);
           });
 
+          probingContext.push({ q: followUpQuestion, a: userResponse });
           refinedQuery = await generateRefinedQuery(
             previousQueries,
             followUpQuestion,
             userResponse
           );
           previousQueries.push(refinedQuery);
-          probingContext.push(refinedQuery);
         }
 
         attempts++;
@@ -134,7 +122,7 @@ const getUserInput = async (): Promise<void> => {
 
       console.log(
         chalk.red(
-          "\nSorry, we couldn't find the perfect movie. We have saved your prefences and we will notify you when we get movies related to your preferences."
+          "\nSorry, we couldn't find the perfect movie. We have saved your preferences and we will notify you when we get movies related to your preferences."
         )
       );
       runInBackgroundTask(() =>
@@ -146,9 +134,6 @@ const getUserInput = async (): Promise<void> => {
   );
 };
 
-/**
- * Starts the Movie Recommendation CLI.
- */
 export const startCLI = async (): Promise<void> => {
   console.clear();
   console.log(
