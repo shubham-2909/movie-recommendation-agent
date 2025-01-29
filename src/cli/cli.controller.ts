@@ -45,18 +45,17 @@ const getUserInput = async (): Promise<void> => {
     async (answer) => {
       if (!answer.trim()) {
         console.log(chalk.red("Oops! You didn’t enter anything. Try again."));
-        rl.close();
-        return;
+        return getUserInput();
       }
 
-      let previousQueries: string[] = [answer]; // Store only the user's original query
+      let previousQueries: string[] = [answer];
       let attempts = 0;
       let suggestedMovies: string[] = [];
-      let feedback = ""; // ✅ Store feedback ("y" or "n")
-      let probingContext: string[] = []; // ✅ Stores refined queries from probing
+      let feedback = "";
+      let probingContext: string[] = [];
 
       while (attempts < 3) {
-        const fullQuery = previousQueries.join(" "); // Use only the original user input
+        const fullQuery = previousQueries.join(" ");
         const movies = await getMovieRecommendations(fullQuery);
 
         if (movies.length > 0) {
@@ -69,20 +68,16 @@ const getUserInput = async (): Promise<void> => {
             );
           });
 
-          feedback = await getYesNoResponse(); // ✅ Ensures only "y" or "n" input
-
-          // ✅ Run logging in the background (non-blocking)
-          runInBackgroundTask(() =>
-            saveUserLog(
-              answer,
-              suggestedMovies,
-              probingContext,
-              feedback === "y"
-            )
-          );
+          feedback = await getYesNoResponse();
 
           if (feedback === "y") {
             console.log(chalk.green("\nEnjoy your movie! 🎬"));
+
+            // ✅ Run logging in the background (non-blocking)
+            runInBackgroundTask(() =>
+              saveUserLog(answer, suggestedMovies, probingContext, true)
+            );
+
             rl.close();
             return;
           }
@@ -91,58 +86,59 @@ const getUserInput = async (): Promise<void> => {
           feedback = "n"; // ✅ Mark as unsuccessful attempt
         }
 
-        console.log(
-          chalk.yellow("\nLet's refine your search with better questions:")
-        );
+        if (feedback === "n") {
+          console.log(
+            chalk.yellow("\nLet's refine your search with better questions:")
+          );
 
-        // ✅ Remove all previous probing responses and keep only original input
-        previousQueries = [answer];
+          previousQueries = [answer];
 
-        // **Ask first follow-up question based on initial user input**
-        let followUpQuestion = await generateFirstFollowUpQuestion(answer);
-        console.log(chalk.magentaBright(`• ${followUpQuestion}`));
+          // **Ask first follow-up question based on initial user input**
+          let followUpQuestion = await generateFirstFollowUpQuestion(answer);
+          console.log(chalk.magentaBright(`• ${followUpQuestion}`));
 
-        let userResponse = await new Promise<string>((resolve) => {
-          rl.question(chalk.cyanBright("> "), resolve);
-        });
+          let userResponse = await new Promise<string>((resolve) => {
+            rl.question(chalk.cyanBright("> "), resolve);
+          });
 
-        let refinedQuery = await generateRefinedQuery(
-          previousQueries,
-          followUpQuestion,
-          userResponse
-        );
-        previousQueries.push(refinedQuery);
-        probingContext.push(refinedQuery); // ✅ Store probing query
+          let refinedQuery = await generateRefinedQuery(
+            previousQueries,
+            followUpQuestion,
+            userResponse
+          );
+          previousQueries.push(refinedQuery);
+          probingContext.push(refinedQuery);
 
-        // **Ask second follow-up question based on first response**
-        followUpQuestion = await generateNextFollowUpQuestion(
-          followUpQuestion,
-          userResponse
-        );
-        console.log(chalk.magentaBright(`• ${followUpQuestion}`));
+          // **Ask second follow-up question based on first response**
+          followUpQuestion = await generateNextFollowUpQuestion(
+            followUpQuestion,
+            userResponse
+          );
+          console.log(chalk.magentaBright(`• ${followUpQuestion}`));
 
-        userResponse = await new Promise<string>((resolve) => {
-          rl.question(chalk.cyanBright("> "), resolve);
-        });
+          userResponse = await new Promise<string>((resolve) => {
+            rl.question(chalk.cyanBright("> "), resolve);
+          });
 
-        refinedQuery = await generateRefinedQuery(
-          previousQueries,
-          followUpQuestion,
-          userResponse
-        );
-        previousQueries.push(refinedQuery);
-        probingContext.push(refinedQuery); // ✅ Store probing query
+          refinedQuery = await generateRefinedQuery(
+            previousQueries,
+            followUpQuestion,
+            userResponse
+          );
+          previousQueries.push(refinedQuery);
+          probingContext.push(refinedQuery);
+        }
 
         attempts++;
       }
 
       console.log(
         chalk.red(
-          "\nSorry, we couldn't find the perfect movie. Try again later."
+          "\nSorry, we couldn't find the perfect movie. We have saved your prefences and we will notify you when we get movies related to your preferences."
         )
       );
       runInBackgroundTask(() =>
-        saveUserLog(answer, suggestedMovies, probingContext, feedback === "y")
+        saveUserLog(answer, suggestedMovies, probingContext, false)
       );
 
       rl.close();

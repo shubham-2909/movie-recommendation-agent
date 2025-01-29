@@ -20,7 +20,7 @@ export const searchMovies = async (query: string) => {
 
   const results = await collection.query({
     queryEmbeddings: [queryEmbedding],
-    nResults: 3, // Return the top 3 matches
+    nResults: 5, // Return the top 3 matches
   });
 
   return results;

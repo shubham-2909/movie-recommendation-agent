@@ -26,10 +26,10 @@ const readMoviesFromCSV = async () => {
           description: row.overview,
           year: row.release_date?.split("-")[0],
           rating: row.vote_average || "N/A",
-          keywords: row.keywords || "", // New field
-          credits: row.credits || "", // New field
-          tagline: row.tagline || "", // New field
-          production_companies: row.production_companies || "", // New field
+          keywords: row.keywords || "",
+          credits: row.credits || "",
+          tagline: row.tagline || "",
+          production_companies: row.production_companies || "",
         });
       })
       .on("end", () => {

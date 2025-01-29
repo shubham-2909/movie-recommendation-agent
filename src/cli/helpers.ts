@@ -35,7 +35,7 @@ export const generateRefinedQuery = async (
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo", // ✅ Best model for precise query refinement
+      model: "gpt-4o-2024-11-20",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.5,
     });
@@ -73,20 +73,20 @@ export const generateFirstFollowUpQuestion = async (
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // ✅ Faster model for follow-up questions
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.8,
+      temperature: 0.4,
     });
 
     return (
       response.choices[0]?.message?.content
         ?.trim()
         .replace(/^[-\d\.\•]+\s*/, "") ||
-      "What specific type of comedy movies do you enjoy?"
+      "What specific type movies do you enjoy?"
     );
   } catch (error) {
     console.error("Error generating first follow-up question:", error);
-    return "What specific type of comedy movies do you enjoy?";
+    return "What specific type of movies do you enjoy?";
   }
 };
 
@@ -115,9 +115,9 @@ export const generateNextFollowUpQuestion = async (
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // ✅ Faster model for follow-up questions
+      model: "gpt-4o-mini", // ✅ Faster model for follow-up questions
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.8,
+      temperature: 0.4,
     });
 
     return (
