@@ -16,24 +16,34 @@ const chromaClient = new ChromaClient({ path: "http://localhost:8000" });
 const readMoviesFromCSV = async () => {
   return new Promise((resolve, reject) => {
     const movies: any[] = [];
+    const uniqueIds = new Set();
+
     fs.createReadStream(MOVIES_CSV_PATH)
       .pipe(csv())
       .on("data", (row) => {
-        movies.push({
-          id: row.id,
-          title: row.title,
-          genre: row.genres,
-          description: row.overview,
-          year: row.release_date?.split("-")[0],
-          rating: row.vote_average || "N/A",
-          keywords: row.keywords || "",
-          credits: row.credits || "",
-          tagline: row.tagline || "",
-          production_companies: row.production_companies || "",
-        });
+        if (movies.length >= 100000) return;
+
+        const movieId = row.id;
+        if (!uniqueIds.has(movieId)) {
+          uniqueIds.add(movieId);
+          movies.push({
+            id: movieId,
+            title: row.title,
+            genre: row.genres,
+            description: row.overview,
+            year: row.release_date?.split("-")[0],
+            rating: row.vote_average || "N/A",
+            keywords: row.keywords || "",
+            credits: row.credits || "",
+            tagline: row.tagline || "",
+            production_companies: row.production_companies || "",
+          });
+        }
       })
       .on("end", () => {
-        console.log(`✅ Loaded ${movies.length} movies from CSV.`);
+        console.log(
+          `✅ Loaded ${movies.length} unique movies (limited to 100k) from CSV.`
+        );
         resolve(movies);
       })
       .on("error", (error) => reject(error));
@@ -43,15 +53,10 @@ const readMoviesFromCSV = async () => {
 const setupAndPopulateCollection = async () => {
   console.log(`Reading movies from: ${MOVIES_CSV_PATH}`);
   let movies = (await readMoviesFromCSV()) as any[];
-  console.log(`Loaded ${movies.length} movies from CSV.`);
 
-  const uniqueMoviesMap = new Map();
-  for (const movie of movies) {
-    uniqueMoviesMap.set(movie.id, movie);
-  }
-  movies = Array.from(uniqueMoviesMap.values());
-  console.log(`Removed duplicates. Unique movies count: ${movies.length}`);
+  console.log(`Loaded ${movies.length} unique movies from CSV.`);
 
+  // Check and delete existing collection
   const collections = await chromaClient.listCollections();
   if (collections.includes(CHROMA_COLLECTION_NAME)) {
     await chromaClient.deleteCollection({ name: CHROMA_COLLECTION_NAME });
