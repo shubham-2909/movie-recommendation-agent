@@ -64,7 +64,11 @@ const getUserInput = async (): Promise<void> => {
           feedback = await getYesNoResponse();
 
           if (feedback === "y") {
-            console.log(chalk.green("\nEnjoy your movie! 🎬"));
+            console.log(
+              chalk.green(
+                "\n Thanks for using out movie recommendation system. Enjoy your movie! 🎬"
+              )
+            );
             runInBackgroundTask(() =>
               saveUserLog(answer, suggestedMovies, probingContext, true)
             );
