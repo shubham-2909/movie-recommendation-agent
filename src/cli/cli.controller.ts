@@ -87,20 +87,13 @@ const getUserInput = async (): Promise<void> => {
 
           previousQueries = [answer];
 
+          // First follow-up question
           let followUpQuestion = await generateFirstFollowUpQuestion(answer);
           console.log(chalk.magentaBright(`• ${followUpQuestion}`));
 
           let userResponse = await new Promise<string>((resolve) => {
             rl.question(chalk.cyanBright("> "), resolve);
           });
-
-          if (userResponse.trim().toLowerCase() === "exit") {
-            console.log(
-              chalk.yellow("Exiting Movie Recommendation Agent. Goodbye!")
-            );
-            rl.close();
-            return;
-          }
 
           probingContext.push({ q: followUpQuestion, a: userResponse });
           let refinedQuery = await generateRefinedQuery(
@@ -110,6 +103,7 @@ const getUserInput = async (): Promise<void> => {
           );
           previousQueries.push(refinedQuery);
 
+          // Second follow-up question
           followUpQuestion = await generateNextFollowUpQuestion(
             followUpQuestion,
             userResponse
@@ -120,13 +114,24 @@ const getUserInput = async (): Promise<void> => {
             rl.question(chalk.cyanBright("> "), resolve);
           });
 
-          if (userResponse.trim().toLowerCase() === "exit") {
-            console.log(
-              chalk.yellow("Exiting Movie Recommendation Agent. Goodbye!")
-            );
-            rl.close();
-            return;
-          }
+          probingContext.push({ q: followUpQuestion, a: userResponse });
+          refinedQuery = await generateRefinedQuery(
+            previousQueries,
+            followUpQuestion,
+            userResponse
+          );
+          previousQueries.push(refinedQuery);
+
+          // Third follow-up question (New addition)
+          followUpQuestion = await generateNextFollowUpQuestion(
+            followUpQuestion,
+            userResponse
+          );
+          console.log(chalk.magentaBright(`• ${followUpQuestion}`));
+
+          userResponse = await new Promise<string>((resolve) => {
+            rl.question(chalk.cyanBright("> "), resolve);
+          });
 
           probingContext.push({ q: followUpQuestion, a: userResponse });
           refinedQuery = await generateRefinedQuery(
