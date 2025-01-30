@@ -66,7 +66,7 @@ const getUserInput = async (): Promise<void> => {
           if (feedback === "y") {
             console.log(
               chalk.green(
-                "\n Thanks for using out movie recommendation system. Enjoy your movie! 🎬"
+                "\n Thanks for using our movie recommendation system. Enjoy your movie! 🎬"
               )
             );
             runInBackgroundTask(() =>
@@ -94,6 +94,14 @@ const getUserInput = async (): Promise<void> => {
             rl.question(chalk.cyanBright("> "), resolve);
           });
 
+          if (userResponse.trim().toLowerCase() === "exit") {
+            console.log(
+              chalk.yellow("Exiting Movie Recommendation Agent. Goodbye!")
+            );
+            rl.close();
+            return;
+          }
+
           probingContext.push({ q: followUpQuestion, a: userResponse });
           let refinedQuery = await generateRefinedQuery(
             previousQueries,
@@ -111,6 +119,14 @@ const getUserInput = async (): Promise<void> => {
           userResponse = await new Promise<string>((resolve) => {
             rl.question(chalk.cyanBright("> "), resolve);
           });
+
+          if (userResponse.trim().toLowerCase() === "exit") {
+            console.log(
+              chalk.yellow("Exiting Movie Recommendation Agent. Goodbye!")
+            );
+            rl.close();
+            return;
+          }
 
           probingContext.push({ q: followUpQuestion, a: userResponse });
           refinedQuery = await generateRefinedQuery(
