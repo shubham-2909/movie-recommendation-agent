@@ -10,8 +10,6 @@ Follow these steps to set up and run the project locally.
 
 Download the Movies Dataset in .csv format from Kaggle:
 
-🔗 Movies Dataset
-
 2️⃣ Organize the Data
 
 After downloading the dataset:
@@ -19,16 +17,6 @@ After downloading the dataset:
 Create a data/ folder in the root directory of this project.
 
 Save the CSV file inside the data/ folder as movies.csv.
-
-📂 Project Structure:
-
-root/
-│── data/
-│ └── movies.csv
-│── src/
-│── package.json
-│── .env
-│── .env.example
 
 3️⃣ Run ChromaDB Locally
 
@@ -38,7 +26,7 @@ docker run -d --rm --name chromadb -p 8000:8000 -v ./chroma:/chroma/chroma -e IS
 
 Alternatively, you can install and run ChromaDB manually from its official documentation.
 
-4️⃣ Run MongoDB Locally (Optional)
+4️⃣ Run MongoDB Locally
 
 If your project requires MongoDB, you can run it using Docker:
 

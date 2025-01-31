@@ -1,0 +1,1 @@
+{"root":["./src/cli/cli.controller.ts","./src/cli/helpers.ts","./src/cli/index.ts","./src/config/chroma.ts","./src/config/constants.ts","./src/config/db.ts","./src/knowledge_base/movie-collection.ts","./src/knowledge_base/vector-search.ts","./src/models/logentry.ts","./src/utils/generate-embeddings.ts","./src/utils/run-in-background.ts"],"version":"5.7.3"}
